@@ -14,6 +14,7 @@ sync.sh
 syncignore.txt
 *.pc
 /log/
+/run/
 *.csv
 /zc_test
 *.onnx
