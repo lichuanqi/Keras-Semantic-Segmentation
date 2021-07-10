@@ -1,8 +1,9 @@
 #coding=utf-8
 import argparse
-import glob
+import glob,os
 import itertools
 import random
+from utils.utils import mk_if_not_exits
 
 import cv2
 import numpy as np
@@ -13,14 +14,15 @@ import Models
 from Models import build_model
 from metrics import metrics
 
+from postProcessing import png_alignment, png_viz
 
 EPS = 1e-12
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--test_images", type=str, default="data/RailGuard294/test/")
-parser.add_argument("--output_path", type=str, default="data/RailGuard294/output")
-parser.add_argument("--weights_path",type=str, default="weights/0706-o_unet++/e45_a0.993910.hdf5")
-parser.add_argument("--model_name", type=str, default="unet++")
+parser.add_argument("--test_images", type=str, default="data/RailGuard/test/")
+parser.add_argument("--output_path", type=str, default="data/RailGuard/output-0710")
+parser.add_argument("--weights_path",type=str, default="weights/0706R2646-o_unet/epoch042_acc0.990559.hdf5")
+parser.add_argument("--model_name", type=str, default="unet")
 parser.add_argument("--input_height", type=int, default=512)
 parser.add_argument("--input_width", type=int, default=512)
 parser.add_argument("--resize_op", type=int, default=2)
@@ -66,6 +68,12 @@ images = glob.glob(images_path + "*.jpg") + \
 images.sort()
 img_num = len(images)
 
+# 输出
+output_mask = os.path.join(output_path, 'mask')
+mk_if_not_exits(output_mask)
+output_viz = os.path.join(output_path, 'viz')
+mk_if_not_exits(output_viz)
+
 print('========================= lc info ===========================')
 print('output_height : {}'.format(output_height))
 print('output_width  : {}'.format(output_width))
@@ -80,7 +88,8 @@ for i in range(img_num):
     origin_w = origin_img.shape[1]
 	
     imgName = images[i].split('/')[-1].split('.')[0]
-    outName = output_path + '/' + imgName + '_output.png'
+    mask_Name = '{}/{}_{}.png'.format(output_mask, imgName, model_name)
+    viz_Name = '{}/{}_{}.png'.format(output_viz, imgName, model_name)
 
     print('{}/{}: {} in processing'.format(i+1,img_num, imgName))
 
@@ -98,9 +107,15 @@ for i in range(img_num):
     else:
         seg_img = (pr * 255).astype('uint8')
         
-    # seg_img = cv2.resize(seg_img, (input_width, input_height), interpolation=cv2.INTER_NEAREST)
-    seg_img = cv2.resize(seg_img, (origin_w, origin_w), interpolation=cv2.INTER_NEAREST)
-    cv2.imwrite(outName, seg_img)
+    # seg_img = cv2.resize(seg_img, (origin_w, origin_w), interpolation=cv2.INTER_NEAREST)
+    
+    # 后处理
+    png_crop = png_alignment(origin_img, seg_img)
+    img_viz = png_viz(origin_img, png_crop)
+    
+    # 保存掩码图片和可视化结果
+    cv2.imwrite(mask_Name, seg_img)
+    cv2.imwrite(viz_Name, img_viz)
 
 
 print("======================= Test Success! =======================")
