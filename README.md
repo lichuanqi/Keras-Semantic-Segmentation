@@ -1,10 +1,6 @@
 ﻿# Keras-Sematic-Segmentation
 
-![](image/logo.png)
-
 使用Keras实现深度学习中的一些语义分割模型。
-
-![](image/segdemo.png)
 
 # 配置
 - tensorflow 1.13.1+tensorboard
@@ -17,25 +13,33 @@
 
 # 目录结构
 
-- data 存储输入图像和语义分割标签的文件夹
-```sh
-- data
-	- dataset_name
-		- train_image
-		- train_label
-		- test_image
-		- test_label
+```bash
+├── data             # 存储输入图像和语义分割标签的文件夹
+  └── dataname		 # 数据集名称，训练时指定
+	├── train_image  # 训练集图片
+	├── train_label  # 训练集掩码图片
+	├── val_image    # 验证集图片
+	└── val_label    # 验证集掩码图片
+├── expdata          # 训练数据的输出路径，包含日志和权重
+├── losses           # 常见的分割损失函数如Dice Loss，Tversky Loss等
+├── metrics          # 常见的分割评价指标，比如dice分数，f1分数等
+├── Models           # 存储使用keras实现的一些经典分割模型
+├── tools            # 模型转换工具，将输出的Keras模型转为caffe模型，再转到NCNN/TensorRT/OpenVINO等推理框架进行部署
+├── utils            # 存储工具代码，如数据预处理，自定义resize方式等 
+├── weights          # 下载的现有权重
+├── image
+├── ncnn
+├── tensorrt
+├── openvino
+├── test.py          # 模型测试,原始版本 
+├── test_new.py      # 模型测试,改动版本
+├── train.py         # 模型训练,原始版本 
+├── train_new.py	 # 模型训练,改动版本
+├── data.py          # 加载1个batch的原始图片和分割标签图片
+├── json_to_dataset.py  # 批量处理多张图片并一步建好所需目录及相关mask文件
+├── albumentations.py   # 数据扩增,详见其他代码库
+└── postProcessing.py   # 模型测试结果后处理
 ```
-
-- Models 存储使用keras实现的一些经典分割模型
-- utils 存储工具代码，如数据预处理，自定义resize方式等
-- losses 常见的分割损失函数如Dice Loss，Tversky Loss等
-- metrics 常见的分割评价指标，比如dice分数，f1分数等
-- tools 模型转换工具，将输出的Keras模型转为caffe模型，再转到NCNN/TensorRT/OpenVINO等推理框架进行部署
-- data.py 加载1个batch的原始图片和分割标签图片
-- train.py 模型训练
-- test.py 模型测试
-- json_to_dataset.py 批量处理多张图片并一步建好所需目录及相关mask文件
 
 # 已支持的分割模型
 
@@ -345,8 +349,3 @@ https://github.com/BBuf/Keras-Semantic-Segmentation-Model-Zoo
 
 - QQ群号 1030186545
 - 加群密码 qqq
-
-
-
-
-

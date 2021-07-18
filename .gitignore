@@ -1,8 +1,7 @@
 
 # path
 /data/
-/data/*
-/log/
+/expdata/
 /runs/
 /weights/
 /__pycache__/

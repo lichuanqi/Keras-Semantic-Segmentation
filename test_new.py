@@ -21,10 +21,10 @@ EPS = 1e-12
 parser = argparse.ArgumentParser()
 parser.add_argument("--test_images", type=str, 
                     default="/media/lcq/Data/modle_and_code/DataSet/RailGuard/bj_jpgs/")
-parser.add_argument("--output_path", type=str, 
-                    default="/media/lcq/Data/modle_and_code/DataSet/RailGuard/bj_output")
 parser.add_argument("--weights_path",type=str, 
-                    default="weights/0706R2646-o_unet/epoch042_acc0.990559.hdf5")
+                    default="expdata/0716_R500x10_unet/epoch54_acc0.982513.hdf5")
+parser.add_argument("--output_path", type=str, 
+                    default="expdata/0717_R600x10_unet")
 parser.add_argument("--model_name", type=str, default="unet")
 parser.add_argument("--input_height", type=int, default=512)
 parser.add_argument("--input_width", type=int, default=512)
@@ -74,10 +74,7 @@ images.sort()
 img_num = len(images)
 
 # 输出
-output_mask = os.path.join(output_path, 'mask')
-mk_if_not_exits(output_mask)
-output_viz = os.path.join(output_path, 'viz')
-mk_if_not_exits(output_viz)
+mk_if_not_exits(output_path)
 
 print('========================= lc info ===========================')
 print('test images path : {}'.format(images_path))
@@ -90,8 +87,8 @@ for i in range(img_num):
     origin_w = origin_img.shape[1]
 	
     imgName = images[i].split('/')[-1].split('.')[0]
-    mask_Name = '{}/{}_{}.png'.format(output_mask, imgName, model_name)
-    viz_Name = '{}/{}_{}.png'.format(output_viz, imgName, model_name)
+    mask_Name = os.path.join(output_path, 'mask_{}.png'.format(imgName))
+    viz_Name = os.path.join(output_path, 'viz_{}.jpg'.format(imgName))
 
     print('{}/{}: {} in processing'.format(i+1,img_num, imgName))
 

@@ -26,10 +26,10 @@ session = tf.Session(config=config)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--model_name", type=str, default="unet")
-parser.add_argument("--exp_name", type=str, default='0716R5000-o')
-parser.add_argument("--dataset_name", type=str,default="RailGuard500x10") 
+parser.add_argument("--exp_name", type=str, default='0718_R600')
+parser.add_argument("--dataset_name", type=str,default="RailGuard8") 
 parser.add_argument("--n_classes", type=int, default=2)
-parser.add_argument("--epochs", type=int, default=100)
+parser.add_argument("--epochs", type=int, default=2)
 
 parser.add_argument("--input_height", type=int, default=512)
 parser.add_argument("--input_width", type=int, default=512)
@@ -37,10 +37,10 @@ parser.add_argument("--input_width", type=int, default=512)
 parser.add_argument('--validate', type=bool, default=True)
 parser.add_argument("--resize_op", type=int, default=2)
 
-parser.add_argument("--train_batch_size", type=int, default=4)
-parser.add_argument("--val_batch_size", type=int, default=4)
+parser.add_argument("--train_batch_size", type=int, default=1)
+parser.add_argument("--val_batch_size", type=int, default=1)
 
-parser.add_argument("--train_save_path", type=str, default="weights/")
+parser.add_argument("--train_save_path", type=str, default="expdata/")
 # parser.add_argument("--resume", type=str, default="weights/0705_unet_R294/unet.48-0.987546.hdf5")
 parser.add_argument("--resume", type=str, default="")
 parser.add_argument("--optimizer_name", type=str, default="adam")
@@ -53,6 +53,7 @@ args = parser.parse_args()
 
 # 再定义一些keras回调函数需要的参数
 
+exp_name = args.exp_name
 train_save_path = args.train_save_path
 epochs = args.epochs
 load_weights = args.resume
@@ -67,6 +68,7 @@ data_root = os.path.join("data", args.dataset_name)
 train_images = os.path.join(data_root, "train_image")
 train_segs = os.path.join(data_root, "train_label")
 train_batch_size = args.train_batch_size
+
 validate = args.validate
 if validate:
     val_images = os.path.join(data_root, "val_image")
@@ -107,7 +109,7 @@ print('val path   : {}'.format(val_images))
 print('val num    : {}'.format(num_val))
 
 # 设置log的存储位置，将网络权值以图片格式保持在tensorboard中显示，设置每一个周期计算一次网络的
-log_dir = 'runs/{}_{}_log'.format(args.exp_name, args.model_name)
+log_dir = os.path.join(train_save_path, '{}_{}/log'.format(exp_name, model_name))
 mk_if_not_exits(log_dir)
 tb_cb = keras.callbacks.TensorBoard(log_dir=log_dir,
                                     histogram_freq=0,
@@ -133,7 +135,7 @@ log_file_path = log_dir + '/log.csv'
 csv_logger = CSVLogger(log_file_path, append=False)
 
 # 保存权重文件的路径
-weights_dir = '{}{}_{}'.format(train_save_path, args.exp_name, args.model_name)
+weights_dir = os.path.join(train_save_path, '{}_{}/weights'.format(exp_name, model_name))
 mk_if_not_exits(weights_dir)
 model_names = weights_dir + '/epoch{epoch:02d}_acc{acc:2f}.hdf5'
 
