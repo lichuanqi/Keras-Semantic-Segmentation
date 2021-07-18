@@ -1,23 +1,28 @@
-*.vscode
-*.json
-*.jpg
-*.hdf5
+
+# path
 /data/
+/data/*
+/log/
+/runs/
 /weights/
 /__pycache__/
 __pycache__/
+
+# file
+*.csv
+*.onnx
+*.pb
+*.json
+*.jpg
+*.hdf5
 *.csv
 *.pyc
-/data/*
+*.xml
 *.zip
+*.vscode
+
+# other
 sync.sh
 syncignore.txt
 *.pc
-/log/
-/run/
-*.csv
-/zc_test
-*.onnx
-*.pb
 idea
-*.xml

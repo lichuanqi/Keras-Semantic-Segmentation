@@ -19,18 +19,23 @@ from postProcessing import png_alignment, png_viz
 EPS = 1e-12
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--test_images", type=str, default="data/RailGuard/test/")
-parser.add_argument("--output_path", type=str, default="data/RailGuard/output-0710")
-parser.add_argument("--weights_path",type=str, default="weights/0706R2646-o_unet/epoch042_acc0.990559.hdf5")
+parser.add_argument("--test_images", type=str, 
+                    default="/media/lcq/Data/modle_and_code/DataSet/RailGuard/bj_jpgs/")
+parser.add_argument("--output_path", type=str, 
+                    default="/media/lcq/Data/modle_and_code/DataSet/RailGuard/bj_output")
+parser.add_argument("--weights_path",type=str, 
+                    default="weights/0706R2646-o_unet/epoch042_acc0.990559.hdf5")
 parser.add_argument("--model_name", type=str, default="unet")
 parser.add_argument("--input_height", type=int, default=512)
 parser.add_argument("--input_width", type=int, default=512)
 parser.add_argument("--resize_op", type=int, default=2)
 parser.add_argument("--classes", type=int, default=2)
 # streetscape(12)(320x640), helen_small(11)(512x512), bbufdataset(2)
-parser.add_argument("--mIOU", type=bool, default=False)
-parser.add_argument("--val_images",type=str, default="")
-parser.add_argument("--val_annotations",type=str,default="")
+parser.add_argument("--mIOU", type=bool, default=True)
+parser.add_argument("--val_images",type=str, 
+                    default="/media/lcq/Data/modle_and_code/DataSet/RailGuard/bj_jpgs/")
+parser.add_argument("--val_annotations",type=str,
+                    default="/media/lcq/Data/modle_and_code/DataSet/RailGuard/bj_masks/")
 parser.add_argument("--image_init", type=str, default="divide")
 
 args = parser.parse_args()
@@ -75,11 +80,8 @@ output_viz = os.path.join(output_path, 'viz')
 mk_if_not_exits(output_viz)
 
 print('========================= lc info ===========================')
-print('output_height : {}'.format(output_height))
-print('output_width  : {}'.format(output_width))
 print('test images path : {}'.format(images_path))
 print('test images num  : {}'.format(img_num))
-print('test images name : {}'.format(images))
 
 for i in range(img_num):
     
@@ -114,7 +116,7 @@ for i in range(img_num):
     img_viz = png_viz(origin_img, png_crop)
     
     # 保存掩码图片和可视化结果
-    cv2.imwrite(mask_Name, seg_img)
+    cv2.imwrite(mask_Name, png_crop)
     cv2.imwrite(viz_Name, img_viz)
 
 
@@ -126,24 +128,31 @@ if iou:
     fp = np.zeros(n_class)
     fn = np.zeros(n_class)
     n_pixels = np.zeros(n_class)
+
     images_path = args.val_images
     segs_path = args.val_annotations
     assert images_path[-1] == '/'
     assert segs_path[-1] == '/'
-    images = glob.glob(images_path + "*.jpg") + glob.glob(
-        images_path + "*.png") + glob.glob(images_path + "*.jpeg")
+    
+    images = glob.glob(images_path + "*.jpg") + \
+             glob.glob(images_path + "*.png") + \
+             glob.glob(images_path + "*.jpeg")
     images.sort()
-    segmentations = glob.glob(segs_path + "*.jpg") + glob.glob(
-        segs_path + "*.png") + glob.glob(segs_path + "*.jpeg")
+    segmentations = glob.glob(segs_path + "*.jpg") + \
+                    glob.glob(segs_path + "*.png") + \
+                    glob.glob(segs_path + "*.jpeg")
     segmentations.sort()
     assert len(images) == len(segmentations)
+    
     zipped = itertools.cycle(zip(images, segmentations))
     for _ in range(len(images)):
         img_path, seg_path = next(zipped)
         # get origin h, w
-        img = data.getImage(img_path, input_width, input_height, image_init,
-                            resize_op)
-        gt = data.getLable(seg_path, n_class, output_width, output_height,
+        img = data.getImage(img_path, 
+                            input_width, input_height, 
+                            image_init,resize_op)
+        gt = data.getLable(seg_path, n_class, 
+                           output_width, output_height,
                            resize_op)
         pr = model.predict(np.array([img]))[0]
         gt = gt.argmax(axis=-1)
@@ -156,7 +165,13 @@ if iou:
             fp[c] += np.sum((pr == c) * (gt != c))
             fn[c] += np.sum((pr != c) * (gt == c))
             n_pixels[c] += np.sum(gt == c)
-    print(tp)
+    
+    print('=================== iou info ===================')
+
+    print('TP : {}'.format(tp))
+    print('FP : {}'.format(fp))
+    print('FN : {}'.format(fn))
+
     cl_wise_score = tp / (tp + fp + fn + EPS)
     n_pixels_norm = n_pixels / np.sum(n_pixels)
     frequency_weighted_IU = np.sum(cl_wise_score * n_pixels_norm)

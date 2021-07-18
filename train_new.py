@@ -16,21 +16,20 @@ from metrics import metrics
 from losses import LOSS_FACTORY
 
 from keras.callbacks import History
-from keras.callbacks import ModelCheckpoint
-history = History()
 
+
+history = History()
 
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
 session = tf.Session(config=config)
 
-
 parser = argparse.ArgumentParser()
 parser.add_argument("--model_name", type=str, default="unet")
-parser.add_argument("--exp_name", type=str, default='0706-o')
-parser.add_argument("--dataset_name", type=str,default="RailGuard2646") 
+parser.add_argument("--exp_name", type=str, default='0716R5000-o')
+parser.add_argument("--dataset_name", type=str,default="RailGuard500x10") 
 parser.add_argument("--n_classes", type=int, default=2)
-parser.add_argument("--epochs", type=int, default=150)
+parser.add_argument("--epochs", type=int, default=100)
 
 parser.add_argument("--input_height", type=int, default=512)
 parser.add_argument("--input_width", type=int, default=512)
@@ -44,12 +43,11 @@ parser.add_argument("--val_batch_size", type=int, default=4)
 parser.add_argument("--train_save_path", type=str, default="weights/")
 # parser.add_argument("--resume", type=str, default="weights/0705_unet_R294/unet.48-0.987546.hdf5")
 parser.add_argument("--resume", type=str, default="")
-parser.add_argument("--optimizer_name", type=str, default="sgd")
+parser.add_argument("--optimizer_name", type=str, default="adam")
 parser.add_argument("--image_init", type=str, default="divide")
 parser.add_argument("--multi_gpus", type=bool, default=False)
 parser.add_argument("--gpu_count", type=int, default=1)
 parser.add_argument("--loss", type=str, default='dice')
-
 
 args = parser.parse_args()
 
@@ -71,8 +69,8 @@ train_segs = os.path.join(data_root, "train_label")
 train_batch_size = args.train_batch_size
 validate = args.validate
 if validate:
-    val_images = os.path.join(data_root, "test_image")
-    val_segs = os.path.join(data_root, "test_label")
+    val_images = os.path.join(data_root, "val_image")
+    val_segs = os.path.join(data_root, "val_label")
     val_batch_size = args.val_batch_size
 
 # 数据参数
@@ -92,13 +90,13 @@ if multi_gpus == True:
 
 # 统计一下训练集/验证集样本数，确定每一个epoch需要训练的iter
 images = glob.glob(os.path.join(train_images, "*.jpg")) + \
-    glob.glob(os.path.join(train_images, "*.png")) + \
-    glob.glob(os.path.join(train_images, "*.jpeg"))
+         glob.glob(os.path.join(train_images, "*.png")) + \
+         glob.glob(os.path.join(train_images, "*.jpeg"))
 num_train = len(images)
 
 images = glob.glob(os.path.join(val_images, "*.jpg")) + \
-    glob.glob(os.path.join(val_images, "*.png")) + \
-    glob.glob(os.path.join(val_images, "*.jpeg"))
+         glob.glob(os.path.join(val_images, "*.png")) + \
+         glob.glob(os.path.join(val_images, "*.jpeg"))
 num_val = len(images)
 
 print('========================= lc info ===========================')
@@ -113,46 +111,51 @@ log_dir = 'runs/{}_{}_log'.format(args.exp_name, args.model_name)
 mk_if_not_exits(log_dir)
 tb_cb = keras.callbacks.TensorBoard(log_dir=log_dir,
                                     histogram_freq=0,
-                                    write_graph=True, write_grads=False, write_images=True,
+                                    write_images=True,
                                     embeddings_freq=0, embeddings_layer_names=None,
                                     update_freq=500)
 
-# 模型回调函数
-early_stop = EarlyStopping('loss', min_delta=0.1, patience=100, verbose=1)
-reduce_lr = ReduceLROnPlateau(monitor='loss',
+# 学习率
+early_stop = EarlyStopping(monitor='val_loss', 
+                           min_delta=0.1, 
+                           patience=30, 
+                           verbose=1,
+                           mode='auto')
+reduce_lr = ReduceLROnPlateau(monitor='val_loss',
                               factor=0.1,
-                              patience=20,
+                              patience=6,
                               mode='auto',
-                              epsilon=0.0001,
+                              min_delta=0.0001,
                               verbose=1,
                               min_lr=0)
 # 保存日志保存
 log_file_path = log_dir + '/log.csv'
 csv_logger = CSVLogger(log_file_path, append=False)
 
-# 保存权重文件
+# 保存权重文件的路径
 weights_dir = '{}{}_{}'.format(train_save_path, args.exp_name, args.model_name)
 mk_if_not_exits(weights_dir)
-model_names = weights_dir +'/e{epoch:02d}_a{acc:2f}.hdf5'
+model_names = weights_dir + '/epoch{epoch:02d}_acc{acc:2f}.hdf5'
 
-model_checkpoint = ParallelModelCheckpoint(model, filepath=model_names,
+# 保存权重
+if multi_gpus == True:
+    model_checkpoint = ParallelModelCheckpoint(model, filepath=model_names,
+                                    monitor='val_acc',
+                                    save_best_only=True,
+                                    save_weights_only=True,
+                                    mode='auto')
+else:
+    model_checkpoint = ParallelModelCheckpoint(model, filepath=model_names,
                                    monitor='val_acc',
                                    save_best_only=True,
                                    save_weights_only=True,
-                                   mode='max')
-
-if multi_gpus == True:
-     model_checkpoint = ParallelModelCheckpoint(model, filepath=model_names,
-                                    monitor='loss',
-                                    save_best_only=True,
-                                    save_weights_only=False)
+                                   mode='auto')
 
 call_backs = [model_checkpoint, csv_logger, early_stop, reduce_lr, tb_cb]
 
 # 损失函数
 loss_func  = LOSS_FACTORY[args.loss]
 
-# compile
 if multi_gpus == True:
 	parallel_model.compile(loss=loss_func,
               	optimizer=optimizer_name,
@@ -191,8 +194,6 @@ if validate:
                                              output_height, output_width,
                                              image_init)
 
-
-
 # 开始训练
 if not validate:
     history = model.fit_generator(train_ge,
@@ -214,4 +215,3 @@ else:
                         validation_steps=int(num_val / val_batch_size),
                         max_q_size=10,
                         workers=1)
-
