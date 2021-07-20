@@ -26,10 +26,10 @@ session = tf.Session(config=config)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--model_name", type=str, default="unet")
-parser.add_argument("--exp_name", type=str, default='0718_R600')
-parser.add_argument("--dataset_name", type=str,default="RailGuard8") 
+parser.add_argument("--exp_name", type=str, default='0718_R660')
+parser.add_argument("--dataset_name", type=str,default="RailGuard660") 
 parser.add_argument("--n_classes", type=int, default=2)
-parser.add_argument("--epochs", type=int, default=2)
+parser.add_argument("--epochs", type=int, default=100)
 
 parser.add_argument("--input_height", type=int, default=512)
 parser.add_argument("--input_width", type=int, default=512)
@@ -37,8 +37,8 @@ parser.add_argument("--input_width", type=int, default=512)
 parser.add_argument('--validate', type=bool, default=True)
 parser.add_argument("--resize_op", type=int, default=2)
 
-parser.add_argument("--train_batch_size", type=int, default=1)
-parser.add_argument("--val_batch_size", type=int, default=1)
+parser.add_argument("--train_batch_size", type=int, default=4)
+parser.add_argument("--val_batch_size", type=int, default=4)
 
 parser.add_argument("--train_save_path", type=str, default="expdata/")
 # parser.add_argument("--resume", type=str, default="weights/0705_unet_R294/unet.48-0.987546.hdf5")
@@ -108,8 +108,8 @@ print('train num  : {}'.format(num_train))
 print('val path   : {}'.format(val_images))
 print('val num    : {}'.format(num_val))
 
-# 设置log的存储位置，将网络权值以图片格式保持在tensorboard中显示，设置每一个周期计算一次网络的
-log_dir = os.path.join(train_save_path, '{}_{}/log'.format(exp_name, model_name))
+# 设置log的存储位置，将网络权值以图片格式保持在tensorboard中显示
+log_dir = os.path.join(train_save_path, '{}_{}'.format(exp_name, model_name))
 mk_if_not_exits(log_dir)
 tb_cb = keras.callbacks.TensorBoard(log_dir=log_dir,
                                     histogram_freq=0,
@@ -118,26 +118,26 @@ tb_cb = keras.callbacks.TensorBoard(log_dir=log_dir,
                                     update_freq=500)
 
 # 学习率
-early_stop = EarlyStopping(monitor='val_loss', 
-                           min_delta=0.1, 
+early_stop = EarlyStopping(monitor='val_acc', 
+                           min_delta=0.0001, 
                            patience=30, 
                            verbose=1,
                            mode='auto')
-reduce_lr = ReduceLROnPlateau(monitor='val_loss',
+reduce_lr = ReduceLROnPlateau(monitor='val_acc',
                               factor=0.1,
                               patience=6,
                               mode='auto',
                               min_delta=0.0001,
                               verbose=1,
                               min_lr=0)
-# 保存日志保存
-log_file_path = log_dir + '/log.csv'
+# 保存日志
+log_file_path = os.path.join(log_dir + 'log.csv')
 csv_logger = CSVLogger(log_file_path, append=False)
 
 # 保存权重文件的路径
 weights_dir = os.path.join(train_save_path, '{}_{}/weights'.format(exp_name, model_name))
 mk_if_not_exits(weights_dir)
-model_names = weights_dir + '/epoch{epoch:02d}_acc{acc:2f}.hdf5'
+model_names = weights_dir + '/epoch{epoch:02d}_acc{acc:2f}_valacc{val_acc:2f}.hdf5'
 
 # 保存权重
 if multi_gpus == True:

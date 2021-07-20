@@ -22,9 +22,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--test_images", type=str, 
                     default="/media/lcq/Data/modle_and_code/DataSet/RailGuard/bj_jpgs/")
 parser.add_argument("--weights_path",type=str, 
-                    default="expdata/0716_R500x10_unet/epoch54_acc0.982513.hdf5")
+                    default="expdata/0718_R600x10_unet/epoch31_acc0.995089.hdf5")
 parser.add_argument("--output_path", type=str, 
-                    default="expdata/0717_R600x10_unet")
+                    default="expdata/0718_R600x10_unet")
 parser.add_argument("--model_name", type=str, default="unet")
 parser.add_argument("--input_height", type=int, default=512)
 parser.add_argument("--input_width", type=int, default=512)
@@ -76,7 +76,7 @@ img_num = len(images)
 # 输出
 mk_if_not_exits(output_path)
 
-print('========================= lc info ===========================')
+print('===================== lc info =======================')
 print('test images path : {}'.format(images_path))
 print('test images num  : {}'.format(img_num))
 
@@ -117,7 +117,7 @@ for i in range(img_num):
     cv2.imwrite(viz_Name, img_viz)
 
 
-print("======================= Test Success! =======================")
+print('===================== Saved =====================')
  
 # mIOU
 if iou:
@@ -163,7 +163,7 @@ if iou:
             fn[c] += np.sum((pr != c) * (gt == c))
             n_pixels[c] += np.sum(gt == c)
     
-    print('=================== iou info ===================')
+    print('===================== iou info =====================')
 
     print('TP : {}'.format(tp))
     print('FP : {}'.format(fp))
@@ -174,6 +174,6 @@ if iou:
     frequency_weighted_IU = np.sum(cl_wise_score * n_pixels_norm)
     mean_IOU = np.mean(cl_wise_score)
 
-    print("frequency_weighted_IU: ", frequency_weighted_IU)
-    print("mean IOU: ", mean_IOU)
-    print("class_wise_IOU:", cl_wise_score)
+    print("Class Wise IOU : {}".format(cl_wise_score))
+    print("Mean IOU       : {:.5f}".format(mean_IOU))
+    print("Frequency Weighted IOU: {:.5f}".format(frequency_weighted_IU))
