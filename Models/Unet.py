@@ -66,7 +66,7 @@ def UNet(nClasses, input_height=224, input_width=224):
     out = (Reshape((outputHeight * outputWidth, nClasses)))(o)
     out = Activation('softmax')(out)
 
-    model = Model(input=inputs, output=out)
+    model = Model(inputs=inputs, outputs=out)
     model.outputHeight = outputHeight
     model.outputWidth = outputWidth
 

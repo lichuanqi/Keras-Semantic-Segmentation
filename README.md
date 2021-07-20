@@ -3,13 +3,25 @@
 使用Keras实现深度学习中的一些语义分割模型。
 
 # 配置
-- tensorflow 1.13.1+tensorboard
+
+## 数据标注和转换
+- labelme
+
+## 训练和测试
+- tensorflow 1.13.1
 - keras 2.2.4
-- GTX 2080Ti x 2
+- tensorboard
 - Cuda 10.0 + Cudnn7
 - opencv-python
-- labelme（标注数据需要用）
-- PyCaffe（模型部署时用）
+
+## 模型可视化
+```
+pip install pydot
+sudo apt install graphviz
+```
+
+# 模型部署
+- PyCaffe
 
 # 目录结构
 
