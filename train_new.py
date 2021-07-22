@@ -31,8 +31,8 @@ parser.add_argument("--dataset_name", type=str,default="RailGuard660")
 parser.add_argument("--n_classes", type=int, default=2)
 parser.add_argument("--epochs", type=int, default=100)
 
-parser.add_argument("--input_height", type=int, default=512)
-parser.add_argument("--input_width", type=int, default=512)
+parser.add_argument("--input_height", type=int, default=640)
+parser.add_argument("--input_width", type=int, default=640)
 
 parser.add_argument('--validate', type=bool, default=True)
 parser.add_argument("--resize_op", type=int, default=2)
@@ -131,7 +131,7 @@ reduce_lr = ReduceLROnPlateau(monitor='val_acc',
                               verbose=1,
                               min_lr=0)
 # 保存日志
-log_file_path = os.path.join(log_dir + 'log.csv')
+log_file_path = os.path.join(log_dir + '/log.csv')
 csv_logger = CSVLogger(log_file_path, append=False)
 
 # 保存权重文件的路径
@@ -176,7 +176,7 @@ if len(load_weights) > 0:
         model.load_weights(load_weights)
 
 # 打印网络结构
-print("Model output shape : ", model.output_shape)
+# print("Model output shape : ", model.output_shape)
 model.summary() 
 
 output_height = model.outputHeight

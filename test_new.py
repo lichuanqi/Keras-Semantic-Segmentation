@@ -22,12 +22,12 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--test_images", type=str, 
                     default="/media/lcq/Data/modle_and_code/DataSet/RailGuard/bj_jpgs/")
 parser.add_argument("--weights_path",type=str, 
-                    default="expdata/0718_R600x10_unet/epoch31_acc0.995089.hdf5")
+                    default="expdata/0721_R660_unet_3/epoch56_acc0.996290_valacc0.989380.hdf5")
 parser.add_argument("--output_path", type=str, 
-                    default="expdata/0718_R600x10_unet")
+                    default="expdata/0721_R660_unet_3")
 parser.add_argument("--model_name", type=str, default="unet")
-parser.add_argument("--input_height", type=int, default=512)
-parser.add_argument("--input_width", type=int, default=512)
+parser.add_argument("--input_height", type=int, default=640)
+parser.add_argument("--input_width", type=int, default=640)
 parser.add_argument("--resize_op", type=int, default=2)
 parser.add_argument("--classes", type=int, default=2)
 # streetscape(12)(320x640), helen_small(11)(512x512), bbufdataset(2)
@@ -37,7 +37,6 @@ parser.add_argument("--val_images",type=str,
 parser.add_argument("--val_annotations",type=str,
                     default="/media/lcq/Data/modle_and_code/DataSet/RailGuard/bj_masks/")
 parser.add_argument("--image_init", type=str, default="divide")
-
 args = parser.parse_args()
 
 images_path = args.test_images
@@ -85,8 +84,10 @@ for i in range(img_num):
     origin_img = cv2.imread(images[i])
     origin_h = origin_img.shape[0]
     origin_w = origin_img.shape[1]
-	
+    
+    # 保存结果时的文件名
     imgName = images[i].split('/')[-1].split('.')[0]
+    org_Name = os.path.join(output_path, 'org_{}.png'.format(imgName))
     mask_Name = os.path.join(output_path, 'mask_{}.png'.format(imgName))
     viz_Name = os.path.join(output_path, 'viz_{}.jpg'.format(imgName))
 
@@ -105,22 +106,23 @@ for i in range(img_num):
             seg_img[:, :, 2] += ((pr[:, :] == c) * (colors[c][2])).astype('uint8')
     else:
         seg_img = (pr * 255).astype('uint8')
-        
-    # seg_img = cv2.resize(seg_img, (origin_w, origin_w), interpolation=cv2.INTER_NEAREST)
-    
+   
     # 后处理
     png_crop = png_alignment(origin_img, seg_img)
     img_viz = png_viz(origin_img, png_crop)
     
     # 保存掩码图片和可视化结果
+    # cv2.imwrite(org_Name, seg_img)
     cv2.imwrite(mask_Name, png_crop)
     cv2.imwrite(viz_Name, img_viz)
 
-
-print('===================== Saved =====================')
+print('Finished')
  
 # mIOU
 if iou:
+
+    print('PA and IoU Start.')
+    
     tp = np.zeros(n_class)
     fp = np.zeros(n_class)
     fn = np.zeros(n_class)
@@ -162,18 +164,29 @@ if iou:
             fp[c] += np.sum((pr == c) * (gt != c))
             fn[c] += np.sum((pr != c) * (gt == c))
             n_pixels[c] += np.sum(gt == c)
-    
-    print('===================== iou info =====================')
 
     print('TP : {}'.format(tp))
     print('FP : {}'.format(fp))
     print('FN : {}'.format(fn))
 
-    cl_wise_score = tp / (tp + fp + fn + EPS)
-    n_pixels_norm = n_pixels / np.sum(n_pixels)
-    frequency_weighted_IU = np.sum(cl_wise_score * n_pixels_norm)
-    mean_IOU = np.mean(cl_wise_score)
+    # ================= PA 像素准确率 ================
+    # class_PA: 每个类别的 PA
+    # mean_PA : 所有类别的平均 PA
+    class_PA = tp / (tp + fp + EPS)
+    mean_PA = np.mean(class_PA)
 
-    print("Class Wise IOU : {}".format(cl_wise_score))
-    print("Mean IOU       : {:.5f}".format(mean_IOU))
+    # ================== IOU 交并比 ==================
+    # class_IoU: 每个类别的 IoU
+    # mean_IOU : 所有类别的平均 IoU
+    class_IoU = tp / (tp + fp + fn + EPS)
+    mean_IoU = np.mean(class_IoU)
+
+    # ============= frequency weighted IoU ==========
+    n_pixels_norm = n_pixels / np.sum(n_pixels)
+    frequency_weighted_IU = np.sum(class_IoU * n_pixels_norm)
+
+    print('Class PA: {}'.format(class_PA))
+    print('Mean PA : {:.5f}'.format(mean_PA))
+    print("Class IoU : {}".format(class_IoU))
+    print("Mean IoU  : {:.5f}".format(mean_IoU))
     print("Frequency Weighted IOU: {:.5f}".format(frequency_weighted_IU))
