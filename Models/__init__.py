@@ -19,7 +19,7 @@ from .VGGUnet import *
 from .DeepLabV2 import *
 from .UNet_Xception_ResNetBlock import *
 from .HRNet import *
-
+from .NewUnet import *
 
 __model_factory = {
     'enet': ENet,
@@ -40,7 +40,8 @@ __model_factory = {
     'icnet': ICNet,
     'deeplab_v2': DeepLabV2,
     'hrnet': HRNet,
-    'unet++': NestedUNet
+    'unet++': NestedUNet,
+    'nunet': NewUnet,
 }
 
 
