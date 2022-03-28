@@ -2,11 +2,11 @@ absl-py==0.12.0
 astor==0.8.1
 cached-property==1.5.2
 certifi==2021.5.30
-dataclasses==0.8
+dataclasses
 gast==0.4.0
 graphviz==0.17
 grpcio==1.38.0
-h5py @ file:///home/lcq/Downloads/h5py-2.10.0-cp36-cp36m-manylinux1_x86_64.whl
+h5py==2.10
 importlib-metadata==4.5.0
 Keras==2.2.4
 Keras-Applications==1.0.8

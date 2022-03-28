@@ -1,9 +1,12 @@
 #coding=utf-8
+# 毕业论文第三章代码
+# 输入：
+# 输出：
+
 import argparse
 import glob,os
 import itertools
 import random
-from time import time
 from utils.utils import mk_if_not_exits
 
 import cv2
@@ -21,22 +24,22 @@ EPS = 1e-12
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--test_images", type=str, 
-                    default="D:/Code/DATASET/RailGuard/bj_jpgs/")
+                    default="D:/Code/1_video/M/")
 parser.add_argument("--weights_path",type=str, 
-                    default="expdata/20220328_R660_unet/epoch57_acc0.995600_valacc0.991459.hdf5")
+                    default="expdata/0721_R660_unet_3/epoch56_acc0.996290_valacc0.989380.hdf5")
 parser.add_argument("--output_path", type=str, 
-                    default="expdata/20220328_R660_unet")
+                    default="expdata/20220310")
 parser.add_argument("--model_name", type=str, default="unet")
 parser.add_argument("--input_height", type=int, default=640)
 parser.add_argument("--input_width", type=int, default=640)
 parser.add_argument("--resize_op", type=int, default=2)
 parser.add_argument("--classes", type=int, default=2)
 # streetscape(12)(320x640), helen_small(11)(512x512), bbufdataset(2)
-parser.add_argument("--mIOU", type=bool, default=True)
+parser.add_argument("--mIOU", type=bool, default=False)
 parser.add_argument("--val_images",type=str, 
-                    default="D:/Code/DATASET/RailGuard/bj_jpgs/")
+                    default="/media/lcq/Data/modle_and_code/DataSet/RailGuard/bj_jpgs/")
 parser.add_argument("--val_annotations",type=str,
-                    default="D:/Code/DATASET/RailGuard/bj_masks/")
+                    default="/media/lcq/Data/modle_and_code/DataSet/RailGuard/bj_masks/")
 parser.add_argument("--image_init", type=str, default="divide")
 args = parser.parse_args()
 
@@ -86,14 +89,9 @@ for i in range(img_num):
     origin_h = origin_img.shape[0]
     origin_w = origin_img.shape[1]
     
-    # 保存结果时的文件名 - Linux
-    # imgName = images[i].split('/')[-1].split('.')[0]
-    # org_Name = os.path.join(output_path, 'org_{}.png'.format(imgName))
-    # mask_Name = os.path.join(output_path, 'mask_{}.png'.format(imgName))
-    # viz_Name = os.path.join(output_path, 'viz_{}.jpg'.format(imgName))
-    
-    # 保存结果时的文件名 - Windows
+    # 保存结果时的文件名
     imgName = images[i].split('\\')[-1].split('.')[0]
+    
     org_Name = os.path.join(output_path, 'org_{}.png'.format(imgName))
     org_Name = org_Name.replace("/", "\\")
     mask_Name = os.path.join(output_path, 'mask_{}.png'.format(imgName))
@@ -120,7 +118,8 @@ for i in range(img_num):
     img_viz = png_viz(origin_img, png_crop)
     
     # 保存掩码图片和可视化结果
-    # cv2.imwrite(org_Name, seg_img)
+    print(org_Name)
+    cv2.imwrite(org_Name, seg_img)
     cv2.imwrite(mask_Name, png_crop)
     cv2.imwrite(viz_Name, img_viz)
 
