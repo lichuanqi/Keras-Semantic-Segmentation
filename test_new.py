@@ -23,10 +23,10 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--test_images", type=str, 
                     default="D:/Code/DATASET/RailGuard/bj_jpgs/")
 parser.add_argument("--weights_path",type=str, 
-                    default="expdata/20220328_R660_unet/epoch57_acc0.995600_valacc0.991459.hdf5")
+                    default="expdata/20220328-R660x9_nunet/epoch57_acc0.995839_valacc0.990841.hdf5")
 parser.add_argument("--output_path", type=str, 
-                    default="expdata/20220328_R660_unet")
-parser.add_argument("--model_name", type=str, default="unet")
+                    default="expdata/20220328-R660x9_nunet")
+parser.add_argument("--model_name", type=str, default="nunet")
 parser.add_argument("--input_height", type=int, default=640)
 parser.add_argument("--input_width", type=int, default=640)
 parser.add_argument("--resize_op", type=int, default=2)
@@ -198,3 +198,5 @@ if iou:
     print("Class IoU : {}".format(class_IoU))
     print("Mean IoU  : {:.5f}".format(mean_IoU))
     print("Frequency Weighted IOU: {:.5f}".format(frequency_weighted_IU))
+
+    time.sleep(100)
