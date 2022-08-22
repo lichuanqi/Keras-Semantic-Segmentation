@@ -1,11 +1,14 @@
-absl-py==0.12.0
-astor==0.8.1
-cached-property==1.5.2
-certifi==2021.5.30
+# python=3.7
+
+# lib
+absl-py
+astor
+cached-property
+certifi
 dataclasses
-gast==0.4.0
+gast
 graphviz==0.17
-grpcio==1.38.0
+grpcio
 h5py==2.10
 importlib-metadata==4.5.0
 Keras==2.2.4
@@ -14,7 +17,7 @@ Keras-Preprocessing==1.1.2
 Markdown==3.3.4
 mock==4.0.3
 numpy==1.16.0
-opencv-python==4.5.2.54
+opencv-python<=4.0
 Pillow==8.2.0
 protobuf==3.17.3
 pydot==1.4.2
