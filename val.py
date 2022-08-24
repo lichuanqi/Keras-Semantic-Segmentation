@@ -24,8 +24,9 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("--model_name", type=str, default="unet")
 parser.add_argument("--weights_path", type=str,
-                    default="D:/Code/Keras-Semantic-Segmentation/runs/20220822_MD500_unet_train/epoch01_acc0.920328_valacc0.806103.hdf5")
-parser.add_argument("--output_path", type=str, default="runs/20220822_MD500_unet_test")
+                    default="runs/20220823_MD500_unet_train/weights/epoch16_acc0.986904_valacc0.979002.hdf5")
+parser.add_argument("--output_path", type=str, 
+                    default="runs/20220823_MD500_unet_test")
 parser.add_argument("--input_height", type=int, default=640)
 parser.add_argument("--input_width", type=int, default=640)
 parser.add_argument("--resize_op", type=int, default=2)

@@ -1,4 +1,7 @@
+# basic
 # python=3.7
+tensorflow==1.15
+# conda install cudatoolkit=10.0 cudnn
 
 # lib
 absl-py
@@ -25,9 +28,8 @@ pyparsing==2.4.7
 PyYAML==5.4.1
 scipy==1.5.4
 six==1.16.0
-tensorboard==1.13.1
-tensorflow==1.13.1
-tensorflow-estimator==1.13.0
+tensorboard
+tensorflow-estimator
 termcolor==1.1.0
 typing-extensions==3.10.0.0
 Werkzeug==2.0.1

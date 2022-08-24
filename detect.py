@@ -19,11 +19,11 @@ EPS = 1e-12
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--test_images", type=str, 
-                    default="D:/CodePost/Miandan500/test_image/10134.png")
+                    default="D:/CodePost/Miandan500/test_image/")
 parser.add_argument("--output_path", type=str, 
-                    default="D:/Code/Keras-Semantic-Segmentation/runs/20220822_MD500_unet_detect2/")
+                    default="D:/Code/Keras-Semantic-Segmentation/runs/20220823_MD500_unet_detect/")
 parser.add_argument("--weights_path", type=str,
-                    default="D:/Code/Keras-Semantic-Segmentation/runs/20220822_MD500_unet_train/epoch01_acc0.920328_valacc0.806103.hdf5")
+                    default="runs/20220823_MD500_unet_train/weights/epoch16_acc0.986904_valacc0.979002.hdf5")
 parser.add_argument("--model_name", type=str, default="unet")
 parser.add_argument("--input_height", type=int, default=640)
 parser.add_argument("--input_width", type=int, default=640)
@@ -60,7 +60,7 @@ output_width = model.outputWidth
 if images_path.endswith(".jpg") or images_path.endswith(".png"):
     images = [images_path]
 else:
-    images = glob.glob(images_path + "/*.jpg") + glob.glob(images_path + "/*.png")
+    images = glob.glob(images_path + "*.jpg") + glob.glob(images_path + "*.png")
 img_num = len(images)
 
 # 输出
@@ -84,11 +84,11 @@ for i in range(img_num):
     # viz_Name = os.path.join(output_path, '{}_viz.jpg'.format(imgName))
     
     # 保存结果时的文件名 - Windows
-    imgName = images[i].split('/')[-1].split('.')[0]
+    imgName = images[i].split('\\')[-1].split('.')[0]
     pr_name = os.path.join(output_path, '{}_pr.png'.format(imgName))
     pr_viz_name = os.path.join(output_path, '{}_pr_viz.jpg'.format(imgName))
 
-    print('{}/{}: {} in processing'.format(i+1,img_num, imgName))
+    print('{}/{}: {} in processing'.format(i+1, img_num, images[i]))
 
     X = data.getImage(images[i], input_width, input_height, image_init, resize_op)
     pr = model.predict(np.array([X]))[0]
