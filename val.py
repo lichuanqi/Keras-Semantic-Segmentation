@@ -6,7 +6,7 @@ import glob
 import itertools
 import random
 from time import time
-from utils.utils import mk_if_not_exits
+import yaml
 
 import cv2
 import numpy as np
@@ -16,6 +16,8 @@ import data
 import Models
 from Models import build_model
 from metrics import metrics
+
+from utils.utils import mk_if_not_exits
 
 
 EPS = 1e-12
@@ -71,6 +73,10 @@ mk_if_not_exits(output_path)
 if iou:
 
     print('PA and IoU Start.')
+
+    # 计算结果保存至 output.yaml
+    yaml_save_name = os.path.join(output_path, 'output.yaml')
+    output_dic = {}
     
     tp = np.zeros(n_class)
     fp = np.zeros(n_class)
@@ -138,9 +144,20 @@ if iou:
     # ============= frequency weighted IoU ==========
     n_pixels_norm = n_pixels / np.sum(n_pixels)
     frequency_weighted_IU = np.sum(class_IoU * n_pixels_norm)
-
+    
     print('Class PA: {}'.format(class_PA))
     print('Mean PA : {:.5f}'.format(mean_PA))
     print("Class IoU : {}".format(class_IoU))
     print("Mean IoU  : {:.5f}".format(mean_IoU))
     print("Frequency Weighted IOU: {:.5f}".format(frequency_weighted_IU))
+
+    # 保存输出结果
+    output_dic['Class PA'] = '%s'%class_PA
+    output_dic['Mean PA'] = '%.5f'%mean_PA
+    output_dic['Class IoU'] = '%s'%class_IoU
+    output_dic['Mean IoU'] = '%.5f'%mean_IoU
+    output_dic['Frequency Weighted IOU'] = '%.5f'%frequency_weighted_IU
+
+    with open(yaml_save_name, 'w') as f:
+        f.write(yaml.dump(output_dic, allow_unicode=True))
+    

@@ -2,6 +2,9 @@
 import argparse
 import glob
 import os
+from re import T
+import yaml
+
 import keras
 import tensorflow as tf
 from keras.utils import multi_gpu_model
@@ -17,7 +20,6 @@ from losses import LOSS_FACTORY
 
 from keras.callbacks import History
 
-
 history = History()
 
 config = tf.ConfigProto()
@@ -26,9 +28,8 @@ session = tf.Session(config=config)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--model_name", type=str, default="unet")
-parser.add_argument("--exp_name", type=str, default='0718_R660')
-parser.add_argument("--dataset_name", type=str,default="RailGuard660") 
-parser.add_argument("--n_classes", type=int, default=2)
+parser.add_argument("--dataset", type=str,default="D:/CodePost/Miandan500") 
+parser.add_argument("--n_classes", type=int, default=3)
 parser.add_argument("--epochs", type=int, default=100)
 
 parser.add_argument("--input_height", type=int, default=640)
@@ -40,7 +41,8 @@ parser.add_argument("--resize_op", type=int, default=2)
 parser.add_argument("--train_batch_size", type=int, default=4)
 parser.add_argument("--val_batch_size", type=int, default=4)
 
-parser.add_argument("--train_save_path", type=str, default="expdata/")
+parser.add_argument("--train_save_path", type=str, default="runs/")
+parser.add_argument("--exp_name", type=str, default='20220824_MD500x10')
 # parser.add_argument("--resume", type=str, default="weights/0705_unet_R294/unet.48-0.987546.hdf5")
 parser.add_argument("--resume", type=str, default="")
 parser.add_argument("--optimizer_name", type=str, default="adam")
@@ -48,10 +50,7 @@ parser.add_argument("--image_init", type=str, default="divide")
 parser.add_argument("--multi_gpus", type=bool, default=False)
 parser.add_argument("--gpu_count", type=int, default=1)
 parser.add_argument("--loss", type=str, default='dice')
-
 args = parser.parse_args()
-
-# 再定义一些keras回调函数需要的参数
 
 exp_name = args.exp_name
 train_save_path = args.train_save_path
@@ -63,17 +62,35 @@ image_init = args.image_init
 multi_gpus = args.multi_gpus
 gpu_count = args.gpu_count
 
+# 设置log的存储位置
+log_dir = os.path.join(train_save_path, '{}_{}'.format(exp_name, model_name))
+mk_if_not_exits(log_dir)
+
+# 保存参数信息至args.yaml
+args_save_path = os.path.join(log_dir, 'args.yaml')
+args_dict = args.__dict__
+with open(args_save_path, 'w') as f:
+    f.write(yaml.dump(args_dict, allow_unicode=True))
+
 # 训练集和验证集路径
-data_root = os.path.join("data", args.dataset_name)
-train_images = os.path.join(data_root, "train_image")
-train_segs = os.path.join(data_root, "train_label")
+train_images = os.path.join(args.dataset, "train_image_aug")
+train_segs = os.path.join(args.dataset, "train_label_aug")
 train_batch_size = args.train_batch_size
 
 validate = args.validate
 if validate:
-    val_images = os.path.join(data_root, "val_image")
-    val_segs = os.path.join(data_root, "val_label")
+    val_images = os.path.join(args.dataset, "val_image")
+    val_segs = os.path.join(args.dataset, "val_label")
     val_batch_size = args.val_batch_size
+
+# 统计一下训练集/验证集样本数
+images = glob.glob(os.path.join(train_images, "*.jpg")) + \
+         glob.glob(os.path.join(train_images, "*.png")) 
+num_train = len(images)
+
+images = glob.glob(os.path.join(val_images, "*.jpg")) + \
+         glob.glob(os.path.join(val_images, "*.png"))
+num_val = len(images)
 
 # 数据参数
 n_classes = args.n_classes
@@ -90,27 +107,13 @@ model = build_model(model_name,
 if multi_gpus == True:
 	parallel_model = multi_gpu_model(model, gpus=gpu_count)
 
-# 统计一下训练集/验证集样本数，确定每一个epoch需要训练的iter
-images = glob.glob(os.path.join(train_images, "*.jpg")) + \
-         glob.glob(os.path.join(train_images, "*.png")) + \
-         glob.glob(os.path.join(train_images, "*.jpeg"))
-num_train = len(images)
-
-images = glob.glob(os.path.join(val_images, "*.jpg")) + \
-         glob.glob(os.path.join(val_images, "*.png")) + \
-         glob.glob(os.path.join(val_images, "*.jpeg"))
-num_val = len(images)
-
 print('========================= lc info ===========================')
-print('Flops      : {}'.format(get_flops(model)))
-print('train path : {}'.format(train_images))
-print('train num  : {}'.format(num_train))
-print('val path   : {}'.format(val_images))
-print('val num    : {}'.format(num_val))
+print('Train path and num : {}/{}'.format(train_images, num_train))
+print('Val path and num   : {}/{}'.format(val_images, num_val))
+print('Model flops        : {}'.format(get_flops(model)))
+print('Log save path      : {}'.format(log_dir))
 
-# 设置log的存储位置，将网络权值以图片格式保持在tensorboard中显示
-log_dir = os.path.join(train_save_path, '{}_{}'.format(exp_name, model_name))
-mk_if_not_exits(log_dir)
+# 将网络权值以图片格式保持在tensorboard中显示
 tb_cb = keras.callbacks.TensorBoard(log_dir=log_dir,
                                     histogram_freq=0,
                                     write_images=True,
@@ -131,7 +134,7 @@ reduce_lr = ReduceLROnPlateau(monitor='val_acc',
                               verbose=1,
                               min_lr=0)
 # 保存日志
-log_file_path = os.path.join(log_dir + '/log.csv')
+log_file_path = os.path.join(log_dir, 'log.csv')
 csv_logger = CSVLogger(log_file_path, append=False)
 
 # 保存权重文件的路径
